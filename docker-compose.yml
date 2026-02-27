@@ -1,19 +1,29 @@
-version: '3.8'
-services:
-  db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: mydb
-    ports:
-      - "5432:5432"
+name: Local Self-Hosted Deploy with Test
 
-  app:
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      - DATABASE_URL=postgres://user:password123@db:5432/mydb?sslmode=disable
-    depends_on:
-      - db
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  test:
+    runs-on: self-hosted  # หรือใช้ ubuntu-latest ก็ได้สำหรับขั้นตอน Test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Run Unit Tests
+        run: go test ./... -v
+
+  deploy:
+    needs: test # <--- บรรทัดสำคัญ! บอกว่าต้อง Test ผ่านก่อนถึงจะเริ่ม Deploy
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Deploying App
+        run: |
+          cd ~/user/golang/go-devops-api
+          git pull origin master
+          docker compose up -d --build
