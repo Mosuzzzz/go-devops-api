@@ -1,4 +1,4 @@
-name: Auto Deploy via Cloudflare Tunnel
+name: Local Self-Hosted Deploy
 
 on:
   push:
@@ -6,23 +6,23 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # --- สำคัญมาก: เปลี่ยนจาก ubuntu-latest เป็น self-hosted ---
+    runs-on: self-hosted
+    # -------------------------------------------------------
     steps:
-      - name: Install Cloudflared on Runner
-        run: |
-          curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-          sudo dpkg -i cloudflared.deb
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Remote SSH Deploy
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VM_IP }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          # สั่งให้ SSH ใช้ cloudflared เป็นตัวกลางในการมุดอุโมงค์
-          proxy_command: /usr/local/bin/cloudflared access ssh --hostname %h
-          script: |
-            cd ~/user/golang/go-devops-api
-            git pull origin master
-            docker compose up -d --build
-            docker image prune -f
+      - name: Deploying App
+        run: |
+          # เข้าไปที่โฟลเดอร์โปรเจกต์
+          cd ~/user/golang/go-devops-api
+          
+          # ดึงโค้ดล่าสุด (เพราะเราใช้ self-hosted เครื่องนี้มี git อยู่แล้ว)
+          git pull origin master
+          
+          # สั่ง Docker รันใหม่
+          docker compose up -d --build
+          
+          # ล้าง Image เก่า
+          docker image prune -f
