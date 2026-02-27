@@ -4,6 +4,11 @@ on:
   push:
     branches: [ "master" ]
 
+# ✅ ย้ายมาไว้ตรงนี้ (Global Level) ทุก Jobs จะใช้ค่าเหล่านี้ได้หมด
+env:
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  DATABASE_URL: ${{ secrets.DB_URL }}
+
 jobs:
   test:
     runs-on: self-hosted
@@ -17,14 +22,9 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Deploying App
-        env:
-          # ดึงค่าจาก GitHub Secrets มาใส่ใน Environment ของ Runner
-          DATABASE_URL: ${{ secrets.DB_URL }}
         run: |
           cd ~/user/golang/go-devops-api
           git pull origin master
           
-          # ส่งค่า Environment เข้าไปใน Docker Compose ตอนรัน
-          DATABASE_URL="$DATABASE_URL" docker compose up -d --build
-  env:
-    DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          # เรียกใช้ตัวแปรที่เราประกาศไว้ที่ Global Env ด้านบน
+          DATABASE_URL="$DATABASE_URL" DB_PASSWORD="$DB_PASSWORD" docker compose up -d --build
