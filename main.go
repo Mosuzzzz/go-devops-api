@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	_ "github.com/lib/pq"
 )
 
@@ -25,6 +26,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+
 	// ทดสอบ Ping ฐานข้อมูล
 	http.HandleFunc("/db-check", func(w http.ResponseWriter, r *http.Request) {
 		err := db.Ping()
@@ -35,6 +37,8 @@ func main() {
 		}
 		fmt.Fprintf(w, "Successfully connected to Database!")
 	})
+
+	http.Handle("/metrics", promhttp.Handler())
 
 	log.Println("Server starting at :8080")
 	http.ListenAndServe(":8080", nil)
