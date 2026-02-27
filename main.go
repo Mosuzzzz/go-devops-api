@@ -39,7 +39,7 @@ func main() {
 	})
 
 	http.Handle("/metrics", promhttp.Handler())
-
+	fmt.Println("Test")
 	log.Println("Server starting at :8080")
 	http.ListenAndServe(":8080", nil)
 }
