@@ -18,24 +18,24 @@ func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	connStr := os.Getenv("DATABASE_URL")
-	db, err := sql.Open("postgres", connStr)
+	// ดึงค่าจาก environment variable ที่เราตั้งไว้ใน docker-compose
+	dbURL := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	http.HandleFunc("/health", HealthCheckHandler)
-
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// ทดสอบ Ping ฐานข้อมูล
+	http.HandleFunc("/db-check", func(w http.ResponseWriter, r *http.Request) {
 		err := db.Ping()
 		if err != nil {
-			fmt.Fprintf(w, "Database Connection Error: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "Database connection failed: %v", err)
 			return
 		}
-		fmt.Fprintln(w, "🚀 Go API is running and PostgreSQL is connected!")
+		fmt.Fprintf(w, "Successfully connected to Database!")
 	})
 
-
-	fmt.Println("Server starting at :8080")
-	log.Fatal(http.ListenAndServe(":8080",nil))
+	log.Println("Server starting at :8080")
+	http.ListenAndServe(":8080", nil)
 }
