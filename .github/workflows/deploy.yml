@@ -1,39 +1,23 @@
-name: Go DevOps CI/CD
+name: Local Self-Hosted Deploy with Test
 
 on:
   push:
     branches: [ "master" ]
 
 jobs:
-  deploy:
-    runs-on: self-hosted # ใช้เครื่อง VirtualBox ของเราเอง
-    
+  test:
+    runs-on: self-hosted
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-
+      - uses: actions/checkout@v4
       - name: Run Unit Tests
-        run: |
-          go test ./... -v
-        # ถ้า Test พัง ขั้นตอนต่อไปจะไม่ทำงานทันที
+        run: go test ./... -v
 
-      - name: Create .env file
+  deploy:
+    needs: test
+    runs-on: self-hosted
+    steps:
+      - name: Deploying App
         run: |
-          # สร้างไฟล์ .env จากค่าที่คุณอาจจะตั้งไว้ใน GitHub Secrets (ถ้ามี)
-          echo "APP_ENV=production" > .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          
-      - name: Build and Deploy with Docker
-        run: |
-          # ใช้คำสั่งในเครื่อง VM โดยตรง
-          docker compose down --remove-orphans
+          cd ~/user/golang/go-devops-api
+          git pull origin master
           docker compose up -d --build
-          
-      - name: Cleanup Old Images
-        run: |
-          docker image prune -f
