@@ -22,7 +22,7 @@ func main() {
 			fmt.Fprintf(w, "Database Connection Error: %v", err)
 			return
 		}
-		fmt.Fprint(w, "🚀 Go API is running and PostgreSQL is connected!")
+		fmt.Fprintln(w, "🚀 Go API is running and PostgreSQL is connected!")
 	})
 
 

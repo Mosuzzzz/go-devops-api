@@ -14,6 +14,8 @@ jobs:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: 60s             # เพิ่มเวลารอเชื่อมต่อเป็น 60 วินาที
+          command_timeout: 10m     # เพิ่มเวลารอคำสั่งทำงานเป็น 10 นาที
           debug: true
           script: |
             cd ~/user/golang/go-devops-api
