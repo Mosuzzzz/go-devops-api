@@ -1,4 +1,4 @@
-name: CI/CD Auto Deploy
+name: Auto Deploy via Cloudflare Tunnel
 
 on:
   push:
@@ -8,15 +8,19 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Install Cloudflared on Runner
+        run: |
+          curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared.deb
+
       - name: Remote SSH Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          timeout: 60s             # เพิ่มเวลารอเชื่อมต่อเป็น 60 วินาที
-          command_timeout: 10m     # เพิ่มเวลารอคำสั่งทำงานเป็น 10 นาที
-          debug: true
+          # สั่งให้ SSH ใช้ cloudflared เป็นตัวกลางในการมุดอุโมงค์
+          proxy_command: /usr/local/bin/cloudflared access ssh --hostname %h
           script: |
             cd ~/user/golang/go-devops-api
             git pull origin master
