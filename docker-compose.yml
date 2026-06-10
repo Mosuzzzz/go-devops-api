@@ -7,7 +7,9 @@ services:
       # ${VARIABLE} คือการบอกให้ Docker ไปดึงค่าจากระบบมาใส่
       - DATABASE_URL=${DATABASE_URL}
     depends_on:
-      - db
+      db:
+        # รอจนกว่า DB จะพร้อมรับ connection จริงๆ ไม่ใช่แค่ container start
+        condition: service_healthy
     restart: always
 
   db:
@@ -17,5 +19,19 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: mydb
+    # ไม่ expose port 5432 ออกไปข้างนอก เพราะมีแค่ app ที่ต้องใช้ (คุยกันผ่าน internal network)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d mydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:latest
     ports:
-      - "5432:5432"
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - app
+    restart: always

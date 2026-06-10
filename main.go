@@ -38,8 +38,14 @@ func main() {
 		fmt.Fprintf(w, "Successfully connected to Database!")
 	})
 
+	http.HandleFunc("/health", HealthCheckHandler)
 	http.Handle("/metrics", promhttp.Handler())
-	fmt.Println("Test")
-	log.Println("Server starting at :8080")
-	http.ListenAndServe(":8080", nil)
+
+	// เปลี่ยน port ได้ผ่าน env PORT (ถ้าไม่ตั้งจะใช้ 8080)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Println("Server starting at :" + port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }

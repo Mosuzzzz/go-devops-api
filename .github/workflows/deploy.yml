@@ -4,11 +4,6 @@ on:
   push:
     branches: [ "master" ]
 
-# ✅ ย้ายมาไว้ตรงนี้ (Global Level) ทุก Jobs จะใช้ค่าเหล่านี้ได้หมด
-env:
-  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-  DATABASE_URL: ${{ secrets.DB_URL }}
-
 jobs:
   test:
     runs-on: self-hosted
@@ -20,6 +15,10 @@ jobs:
   deploy:
     needs: test
     runs-on: self-hosted
+    # Secret ใช้แค่ตอน deploy เลย scope ไว้ที่ job นี้ job เดียว (test ไม่ต้องเห็น)
+    env:
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DATABASE_URL: ${{ secrets.DB_URL }}
     steps:
       - name: Deploying App
         run: |
